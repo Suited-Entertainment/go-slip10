@@ -2,6 +2,10 @@ package slip10
 
 import (
 	"encoding/hex"
+	"fmt"
+	"math"
+	"math/big"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -19,6 +23,19 @@ type testChildKey struct {
 	privKey      string
 	pubKey       string
 	hexPubKey    string
+}
+
+type testVector struct {
+	seed string
+	path []testChain
+}
+
+type testChain struct {
+	name        string
+	fingerprint string
+	chainCode   string
+	private     string
+	public      string
 }
 
 func TestBip32TestVectors(t *testing.T) {
@@ -255,4 +272,124 @@ func assertKeySerialization(t *testing.T, key *Key, knownBase58 string) {
 	unserializedBase58, err := B58Deserialize(serializedBase58)
 	assert.NoError(t, err)
 	assert.Equal(t, key, unserializedBase58)
+}
+
+func TestEd25519TestVectors(t *testing.T) {
+	vector1 := testVector{
+		seed: "000102030405060708090a0b0c0d0e0f",
+		path: []testChain{
+			{
+				name:        "m",
+				fingerprint: "00000000",
+				chainCode:   "90046a93de5380a72b5e45010748567d5ea02bbf6522f979e05c0d8d8ca9fffb",
+				private:     "2b4be7f19ee27bbf30c667b642d5f4aa69fd169872f8fc3059c08ebae2eb19e7",
+				public:      "00a4b2856bfec510abab89753fac1ac0e1112364e7d250545963f135f2a33188ed",
+			},
+			{
+				name:        "0'",
+				fingerprint: "ddebc675",
+				chainCode:   "8b59aa11380b624e81507a27fedda59fea6d0b779a778918a2fd3590e16e9c69",
+				private:     "68e0fe46dfb67e368c75379acec591dad19df3cde26e63b93a8e704f1dade7a3",
+				public:      "008c8a13df77a28f3445213a0f432fde644acaa215fc72dcdf300d5efaa85d350c",
+			},
+			{
+				name:        "1'",
+				fingerprint: "9b02312f",
+				chainCode:   "4187afff1aafa8445010097fb99d23aee9f599450c7bd140b6826ac22ba21d0c",
+				private:     "284e9d38d07d21e4e281b645089a94f4cf5a5a81369acf151a1c3a57f18b2129",
+				public:      "03526c63f8d0b4bbbf9c80df553fe66742df4676b241dabefdef67733e070f6844",
+			},
+			{
+				name:        "2'",
+				fingerprint: "b98005c1",
+				chainCode:   "98c7514f562e64e74170cc3cf304ee1ce54d6b6da4f880f313e8204c2a185318",
+				private:     "694596e8a54f252c960eb771a3c41e7e32496d03b954aeb90f61635b8e092aa7",
+				public:      "0359cf160040778a4b14c5f4d7b76e327ccc8c4a6086dd9451b7482b5a4972dda0",
+			},
+			{
+				name:        "2'",
+				fingerprint: "0e9f3274",
+				chainCode:   "ba96f776a5c3907d7fd48bde5620ee374d4acfd540378476019eab70790c63a0",
+				private:     "5996c37fd3dd2679039b23ed6f70b506c6b56b3cb5e424681fb0fa64caf82aaa",
+				public:      "029f871f4cb9e1c97f9f4de9ccd0d4a2f2a171110c61178f84430062230833ff20",
+			},
+			{
+				name:        "1000000000'",
+				fingerprint: "8b2b5c4b",
+				chainCode:   "b9b7b82d326bb9cb5b5b121066feea4eb93d5241103c9e7a18aad40f1dde8059",
+				private:     "21c4f269ef0a5fd1badf47eeacebeeaa3de22eb8e5b0adcd0f27dd99d34d0119",
+				public:      "02216cd26d31147f72427a453c443ed2cde8a1e53c9cc44e5ddf739725413fe3f4",
+			},
+		},
+	}
+
+	testVectorChain(t, vector1, CurveBitcoin)
+}
+
+func testVectorChain(t *testing.T, vector testVector, c *curve) {
+	// Decode master seed into hex
+	seed, err := hex.DecodeString(vector.seed)
+	assert.NoError(t, err)
+
+	// Generate a master private and public key
+	privKey, err := NewMasterKeyWithCurve(seed, c)
+	assert.NoError(t, err)
+
+	checkChainWithKey(t, vector.path[0], privKey)
+	for _, chain := range vector.path {
+		if chain.name == "m" {
+			continue
+		}
+
+		childIndex, err := parsePathComponenet(chain.name)
+		assert.NoError(t, err)
+
+		privKey, err = privKey.NewChildKey(childIndex)
+		assert.NoError(t, err)
+
+		checkChainWithKey(t, chain, privKey)
+	}
+}
+
+func checkChainWithKey(t *testing.T, chain testChain, privKey *Key) {
+	pubKey := privKey.PublicKey()
+
+	checkHexEqualsBytes(t, chain.chainCode, privKey.ChainCode)
+	checkHexEqualsBytes(t, chain.fingerprint, privKey.FingerPrint)
+	checkHexEqualsBytes(t, chain.private, privKey.Key)
+	checkHexEqualsBytes(t, chain.public, pubKey.Key)
+}
+
+func checkHexEqualsBytes(t *testing.T, input string, value []byte) {
+	parsedInput, err := hex.DecodeString(input)
+	assert.NoError(t, err)
+
+	assert.Equal(t, parsedInput, value)
+}
+
+func parsePathComponenet(component string) (uint32, error) {
+	// Ignore any user added whitespace
+	component = strings.TrimSpace(component)
+	var value uint32
+
+	// Handle hardened paths
+	if strings.HasSuffix(component, "'") {
+		value = 0x80000000
+		component = strings.TrimSpace(strings.TrimSuffix(component, "'"))
+	}
+	// Handle the non hardened component
+	bigval, ok := new(big.Int).SetString(component, 0)
+	if !ok {
+		return 0, fmt.Errorf("invalid component: %s", component)
+	}
+	max := math.MaxUint32 - value
+	if bigval.Sign() < 0 || bigval.Cmp(big.NewInt(int64(max))) > 0 {
+		if value == 0 {
+			return 0, fmt.Errorf("component %v out of allowed range [0, %d]", bigval, max)
+		}
+		return 0, fmt.Errorf("component %v out of allowed hardened range [0, %d]", bigval, max)
+	}
+	value += uint32(bigval.Uint64())
+
+	return value, nil
 }
