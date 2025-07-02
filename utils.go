@@ -94,14 +94,23 @@ func base58Decode(data string) ([]byte, error) {
 	return BitcoinBase58Encoding.DecodeString(data)
 }
 
+type modernCurve interface {
+	PublicKey(key []byte) []byte
+}
+
 // Keys
 type curve struct {
 	elliptic.Curve
+	modernCurve
 
-	hmacKey []byte
+	hmacKey       []byte
+	isModernCurve bool
 }
 
 func (c *curve) publicKeyForPrivateKey(key []byte) []byte {
+	if !c.isModernCurve {
+		return c.PublicKey(key)
+	}
 	return c.compressPublicKey(c.ScalarBaseMult(key))
 }
 
@@ -190,9 +199,7 @@ func (c *curve) validateChildPublicKey(key []byte) error {
 	return nil
 }
 
-//
 // Numerical
-//
 func uint32Bytes(i uint32) []byte {
 	bytes := make([]byte, 4)
 	binary.BigEndian.PutUint32(bytes, i)

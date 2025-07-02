@@ -294,36 +294,84 @@ func TestEd25519TestVectors(t *testing.T) {
 			},
 			{
 				name:        "1'",
-				fingerprint: "9b02312f",
-				chainCode:   "4187afff1aafa8445010097fb99d23aee9f599450c7bd140b6826ac22ba21d0c",
-				private:     "284e9d38d07d21e4e281b645089a94f4cf5a5a81369acf151a1c3a57f18b2129",
-				public:      "03526c63f8d0b4bbbf9c80df553fe66742df4676b241dabefdef67733e070f6844",
+				fingerprint: "13dab143",
+				chainCode:   "a320425f77d1b5c2505a6b1b27382b37368ee640e3557c315416801243552f14",
+				private:     "b1d0bad404bf35da785a64ca1ac54b2617211d2777696fbffaf208f746ae84f2",
+				public:      "001932a5270f335bed617d5b935c80aedb1a35bd9fc1e31acafd5372c30f5c1187",
 			},
 			{
 				name:        "2'",
-				fingerprint: "b98005c1",
-				chainCode:   "98c7514f562e64e74170cc3cf304ee1ce54d6b6da4f880f313e8204c2a185318",
-				private:     "694596e8a54f252c960eb771a3c41e7e32496d03b954aeb90f61635b8e092aa7",
-				public:      "0359cf160040778a4b14c5f4d7b76e327ccc8c4a6086dd9451b7482b5a4972dda0",
+				fingerprint: "ebe4cb29",
+				chainCode:   "2e69929e00b5ab250f49c3fb1c12f252de4fed2c1db88387094a0f8c4c9ccd6c",
+				private:     "92a5b23c0b8a99e37d07df3fb9966917f5d06e02ddbd909c7e184371463e9fc9",
+				public:      "00ae98736566d30ed0e9d2f4486a64bc95740d89c7db33f52121f8ea8f76ff0fc1",
 			},
 			{
 				name:        "2'",
-				fingerprint: "0e9f3274",
-				chainCode:   "ba96f776a5c3907d7fd48bde5620ee374d4acfd540378476019eab70790c63a0",
-				private:     "5996c37fd3dd2679039b23ed6f70b506c6b56b3cb5e424681fb0fa64caf82aaa",
-				public:      "029f871f4cb9e1c97f9f4de9ccd0d4a2f2a171110c61178f84430062230833ff20",
+				fingerprint: "316ec1c6",
+				chainCode:   "8f6d87f93d750e0efccda017d662a1b31a266e4a6f5993b15f5c1f07f74dd5cc",
+				private:     "30d1dc7e5fc04c31219ab25a27ae00b50f6fd66622f6e9c913253d6511d1e662",
+				public:      "008abae2d66361c879b900d204ad2cc4984fa2aa344dd7ddc46007329ac76c429c",
 			},
 			{
 				name:        "1000000000'",
-				fingerprint: "8b2b5c4b",
-				chainCode:   "b9b7b82d326bb9cb5b5b121066feea4eb93d5241103c9e7a18aad40f1dde8059",
-				private:     "21c4f269ef0a5fd1badf47eeacebeeaa3de22eb8e5b0adcd0f27dd99d34d0119",
-				public:      "02216cd26d31147f72427a453c443ed2cde8a1e53c9cc44e5ddf739725413fe3f4",
+				fingerprint: "d6322ccd",
+				chainCode:   "68789923a0cac2cd5a29172a475fe9e0fb14cd6adb5ad98a3fa70333e7afa230",
+				private:     "8f94d394a8e8fd6b1bc2f3f49f5c47e385281d5c17e65324b0f62483e37e8793",
+				public:      "003c24da049451555d51a7014a37337aa4e12d41e485abccfa46b47dfb2af54b7a",
 			},
 		},
 	}
 
-	testVectorChain(t, vector1, CurveBitcoin)
+	vector2 := testVector{
+		seed: "fffcf9f6f3f0edeae7e4e1dedbd8d5d2cfccc9c6c3c0bdbab7b4b1aeaba8a5a29f9c999693908d8a8784817e7b7875726f6c696663605d5a5754514e4b484542",
+		path: []testChain{
+			{
+				name:        "m",
+				fingerprint: "00000000",
+				chainCode:   "ef70a74db9c3a5af931b5fe73ed8e1a53464133654fd55e7a66f8570b8e33c3b",
+				private:     "171cb88b1b3c1db25add599712e36245d75bc65a1a5c9e18d76f9f2b1eab4012",
+				public:      "008fe9693f8fa62a4305a140b9764c5ee01e455963744fe18204b4fb948249308a",
+			},
+			{
+				name:        "0'",
+				fingerprint: "31981b50",
+				chainCode:   "0b78a3226f915c082bf118f83618a618ab6dec793752624cbeb622acb562862d",
+				private:     "1559eb2bbec5790b0c65d8693e4d0875b1747f4970ae8b650486ed7470845635",
+				public:      "0086fab68dcb57aa196c77c5f264f215a112c22a912c10d123b0d03c3c28ef1037",
+			},
+			{
+				name:        "2147483647'",
+				fingerprint: "1e9411b1",
+				chainCode:   "138f0b2551bcafeca6ff2aa88ba8ed0ed8de070841f0c4ef0165df8181eaad7f",
+				private:     "ea4f5bfe8694d8bb74b7b59404632fd5968b774ed545e810de9c32a4fb4192f4",
+				public:      "005ba3b9ac6e90e83effcd25ac4e58a1365a9e35a3d3ae5eb07b9e4d90bcf7506d",
+			},
+			{
+				name:        "1'",
+				fingerprint: "fcadf38c",
+				chainCode:   "73bd9fff1cfbde33a1b846c27085f711c0fe2d66fd32e139d3ebc28e5a4a6b90",
+				private:     "3757c7577170179c7868353ada796c839135b3d30554bbb74a4b1e4a5a58505c",
+				public:      "002e66aa57069c86cc18249aecf5cb5a9cebbfd6fadeab056254763874a9352b45",
+			},
+			{
+				name:        "2147483646'",
+				fingerprint: "aca70953",
+				chainCode:   "0902fe8a29f9140480a00ef244bd183e8a13288e4412d8389d140aac1794825a",
+				private:     "5837736c89570de861ebc173b1086da4f505d4adb387c6a1b1342d5e4ac9ec72",
+				public:      "00e33c0f7d81d843c572275f287498e8d408654fdf0d1e065b84e2e6f157aab09b",
+			},
+			{
+				name:        "2'",
+				fingerprint: "422c654b",
+				chainCode:   "5d70af781f3a37b829f0d060924d5e960bdc02e85423494afc0b1a41bbe196d4",
+				private:     "551d333177df541ad876a60ea71f00447931c0a9da16f227c11ea080d7391b8d",
+				public:      "0047150c75db263559a70d5778bf36abbab30fb061ad69f69ece61a72b0cfa4fc0",
+			},
+		}}
+
+	testVectorChain(t, vector1, CurveEd25519)
+	testVectorChain(t, vector2, CurveEd25519)
 }
 
 func testVectorChain(t *testing.T, vector testVector, c *curve) {
@@ -335,7 +383,7 @@ func testVectorChain(t *testing.T, vector testVector, c *curve) {
 	privKey, err := NewMasterKeyWithCurve(seed, c)
 	assert.NoError(t, err)
 
-	checkChainWithKey(t, vector.path[0], privKey)
+	path := checkChainWithKey(t, vector.path[0], privKey, "")
 	for _, chain := range vector.path {
 		if chain.name == "m" {
 			continue
@@ -347,24 +395,31 @@ func testVectorChain(t *testing.T, vector testVector, c *curve) {
 		privKey, err = privKey.NewChildKey(childIndex)
 		assert.NoError(t, err)
 
-		checkChainWithKey(t, chain, privKey)
+		path = checkChainWithKey(t, chain, privKey, path)
 	}
 }
 
-func checkChainWithKey(t *testing.T, chain testChain, privKey *Key) {
+func checkChainWithKey(t *testing.T, chain testChain, privKey *Key, pathPrefix string) string {
 	pubKey := privKey.PublicKey()
 
-	checkHexEqualsBytes(t, chain.chainCode, privKey.ChainCode)
-	checkHexEqualsBytes(t, chain.fingerprint, privKey.FingerPrint)
-	checkHexEqualsBytes(t, chain.private, privKey.Key)
-	checkHexEqualsBytes(t, chain.public, pubKey.Key)
+	path := pathPrefix
+	if path != "" {
+		path += "/"
+	}
+	path += chain.name
+
+	checkHexEqualsBytes(t, chain.chainCode, privKey.ChainCode, "Chain Code", path)
+	checkHexEqualsBytes(t, chain.fingerprint, privKey.FingerPrint, "Fingerprint", path)
+	checkHexEqualsBytes(t, chain.private, privKey.Key, "Private key", path)
+	checkHexEqualsBytes(t, chain.public, pubKey.Key, "Public key", path)
+	return path
 }
 
-func checkHexEqualsBytes(t *testing.T, input string, value []byte) {
+func checkHexEqualsBytes(t *testing.T, input string, value []byte, name, path string) {
 	parsedInput, err := hex.DecodeString(input)
 	assert.NoError(t, err)
 
-	assert.Equal(t, parsedInput, value)
+	assert.Equalf(t, parsedInput, value, "Expected %s to match at path %s", name, path)
 }
 
 func parsePathComponenet(component string) (uint32, error) {

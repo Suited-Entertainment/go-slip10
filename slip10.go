@@ -15,14 +15,23 @@ import (
 var (
 	// CurveBitcoin generates keys for the secp256k1 curve (equivalent to BIP32)
 	CurveBitcoin = &curve{
-		Curve:   btcutil.Secp256k1(),
-		hmacKey: []byte("Bitcoin seed"),
+		Curve:         btcutil.Secp256k1(),
+		hmacKey:       []byte("Bitcoin seed"),
+		isModernCurve: true,
 	}
 
 	// CurveP256 generates keys for the NIST P-256 curve
 	CurveP256 = &curve{
-		Curve:   elliptic.P256(),
-		hmacKey: []byte("Nist256p1 seed"),
+		Curve:         elliptic.P256(),
+		hmacKey:       []byte("Nist256p1 seed"),
+		isModernCurve: true,
+	}
+
+	// CurveEd25519 generates keys for the ed25519 curve
+	CurveEd25519 = &curve{
+		modernCurve:   Ed25519Curve(),
+		hmacKey:       []byte("ed25519 seed"),
+		isModernCurve: false,
 	}
 )
 
@@ -59,6 +68,9 @@ var (
 
 	// ErrInvalidPublicKey is returned when a derived public key is invalid
 	ErrInvalidPublicKey = errors.New("Invalid public key")
+
+	// ErrInvalidCurve is returned when a curve is invalid with current operation
+	ErrInvalidCurve = errors.New("Invalid curve")
 )
 
 // Key represents a bip32 extended key
@@ -80,23 +92,36 @@ func NewMasterKey(seed []byte) (*Key, error) {
 }
 
 // NewMasterKey creates a new master extended key from a seed using the given curve
+
 func NewMasterKeyWithCurve(seed []byte, curve *curve) (*Key, error) {
 	// Generate key and chaincode
-	hmac := hmac.New(sha512.New, curve.hmacKey)
-	_, err := hmac.Write(seed)
-	if err != nil {
-		return nil, err
-	}
-	intermediary := hmac.Sum(nil)
+	var keyBytes []byte
+	var chainCode []byte
+	for {
+		hmac := hmac.New(sha512.New, curve.hmacKey)
+		_, err := hmac.Write(seed)
+		if err != nil {
+			return nil, err
+		}
+		intermediary := hmac.Sum(nil)
 
-	// Split it into our key and chain code
-	keyBytes := intermediary[:32]
-	chainCode := intermediary[32:]
+		// Split it into our key and chain code
+		keyBytes = intermediary[:32]
+		chainCode = intermediary[32:]
 
-	// Validate key
-	err = curve.validatePrivateKey(keyBytes)
-	if err != nil {
-		return nil, err
+		if !curve.isModernCurve {
+			break
+		}
+
+		// Validate key
+		err = curve.validatePrivateKey(keyBytes)
+		if err != nil && errors.Is(err, ErrInvalidPrivateKey) {
+			seed = intermediary
+			continue
+		} else if err != nil {
+			return nil, err
+		}
+		break
 	}
 
 	// Create the key struct
@@ -116,6 +141,9 @@ func NewMasterKeyWithCurve(seed []byte, curve *curve) (*Key, error) {
 
 // NewChildKey derives a child key from a given parent as outlined by bip32
 func (key *Key) NewChildKey(childIdx uint32) (*Key, error) {
+	if !key.curve.isModernCurve && childIdx < FirstHardenedChild {
+		return nil, ErrInvalidCurve
+	}
 	// Fail early if trying to create hardned child from public key
 	if !key.IsPrivate && childIdx >= FirstHardenedChild {
 		return nil, ErrHardnedChildPublicKey
@@ -142,16 +170,27 @@ func (key *Key) NewChildKey(childIdx uint32) (*Key, error) {
 		if err != nil {
 			return nil, err
 		}
+
 		childKey.FingerPrint = fingerprint[:4]
+		if !key.curve.isModernCurve {
+			childKey.Key = intermediary[:32]
+			return childKey, nil
+		}
+
 		childKey.Key = key.curve.addPrivateKeys(intermediary[:32], key.Key)
 
 		// Validate key
 		err = key.curve.validatePrivateKey(childKey.Key)
 		if err != nil {
+			// TODO: This error should be handeled internally according to slip0010
 			return nil, err
 		}
 		// Bip32 CKDpub
 	} else {
+		if !key.curve.isModernCurve {
+			return nil, ErrInvalidCurve
+		}
+
 		keyBytes := key.curve.publicKeyForPrivateKey(intermediary[:32])
 
 		// Validate key
