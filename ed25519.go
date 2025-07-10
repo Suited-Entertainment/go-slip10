@@ -30,3 +30,8 @@ func (c ed25519Curve) PublicKey(key []byte) []byte {
 	pub, _, _ := c.keypair(key)
 	return append([]byte{0x00}, pub...)
 }
+
+func (c ed25519Curve) PrivateKey(key []byte) []byte {
+	_, priv, _ := c.keypair(key)
+	return priv
+}
